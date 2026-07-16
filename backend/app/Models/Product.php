@@ -66,11 +66,12 @@ class Product extends Model
             return null;
         }
 
-        if (str_starts_with($path, 'http')) {
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
         }
 
-        return url(Storage::url($path));
+        // Absolute URL so the Vercel frontend can load images from the Railway API host.
+        return rtrim((string) config('app.url'), '/').'/storage/'.ltrim($path, '/');
     }
 
     public function getImageUrlAttribute(): ?string
