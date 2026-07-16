@@ -178,10 +178,9 @@ class OrderController extends Controller
             ]);
         }
 
-        // Mark verified first so the customer is never blocked by slow/failing mail.
+        // Keep status as pending — admin will update it from the dashboard.
         $order->update([
             'email_verified_at' => now(),
-            'status' => 'processing',
         ]);
 
         $invoiceSent = false;
