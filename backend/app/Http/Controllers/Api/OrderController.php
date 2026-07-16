@@ -178,9 +178,10 @@ class OrderController extends Controller
             ]);
         }
 
-        // Keep status as pending — admin will update it from the dashboard.
+        // Pending until the customer verifies by email, then move to processing.
         $order->update([
             'email_verified_at' => now(),
+            'status' => 'processing',
         ]);
 
         $invoiceSent = false;
