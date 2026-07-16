@@ -36,13 +36,26 @@ class OrderInvoiceMail extends Mailable
 
     public function attachments(): array
     {
-        $pdf = Pdf::loadView('pdf.invoice', ['order' => $this->order->loadMissing('items')]);
+        try {
+            $this->order->loadMissing('items');
+            $pdf = Pdf::loadView('pdf.invoice', ['order' => $this->order])
+                ->setPaper('a4')
+                ->setOption('isRemoteEnabled', false)
+                ->setOption('defaultFont', 'DejaVu Sans');
 
-        return [
-            Attachment::fromData(
-                fn () => $pdf->output(),
-                'TechStore-Invoice-'.$this->order->order_number.'.pdf'
-            )->withMime('application/pdf'),
-        ];
+            $binary = $pdf->output();
+
+            return [
+                Attachment::fromData(
+                    fn () => $binary,
+                    'TechStore-Invoice-'.$this->order->order_number.'.pdf'
+                )->withMime('application/pdf'),
+            ];
+        } catch (\Throwable $e) {
+            report($e);
+
+            // Still send the HTML invoice email if PDF generation fails.
+            return [];
+        }
     }
 }

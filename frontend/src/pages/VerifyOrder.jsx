@@ -16,7 +16,7 @@ export default function VerifyOrder() {
     ran.current = true
 
     api
-      .get(`/orders/verify/${encodeURIComponent(token)}`)
+      .get(`/orders/verify/${encodeURIComponent(token)}`, { timeout: 45000 })
       .then((res) => {
         setStatus('success')
         setMessage(res.data.message || 'Order verified automatically.')
@@ -27,12 +27,16 @@ export default function VerifyOrder() {
               state: { order: res.data.order },
               replace: true,
             })
-          }, 2000)
+          }, 1500)
         }
       })
       .catch((err) => {
         setStatus('error')
-        setMessage(err.response?.data?.message || 'Verification failed.')
+        const msg =
+          err.code === 'ECONNABORTED'
+            ? 'Verification is taking too long. Please try the link again.'
+            : err.response?.data?.message || 'Verification failed.'
+        setMessage(msg)
       })
   }, [token, navigate])
 

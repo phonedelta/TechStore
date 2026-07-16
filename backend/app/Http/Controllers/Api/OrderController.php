@@ -147,17 +147,14 @@ class OrderController extends Controller
             $payload = [
                 'message' => $emailSent
                     ? 'Verification email sent. Please check your inbox to confirm your order.'
-                    : 'Order created, but the verification email could not be sent. Please contact support.',
+                    : 'Order created, but the verification email could not be sent. Use the link below to confirm.',
                 'order_number' => $order->order_number,
                 'customer_email' => $order->customer_email,
                 'email_verification_required' => true,
                 'email_sent' => $emailSent,
+                // Always return the link so customers can verify even if SMTP fails (Railway/Gmail).
+                'verification_url' => $verifyUrl,
             ];
-
-            // Only expose the link if sending failed (so the customer can still verify)
-            if (! $emailSent) {
-                $payload['verification_url'] = $verifyUrl;
-            }
 
             return response()->json($payload, 201);
         } catch (\RuntimeException $e) {
@@ -181,19 +178,31 @@ class OrderController extends Controller
             ]);
         }
 
+        // Mark verified first so the customer is never blocked by slow/failing mail.
         $order->update([
             'email_verified_at' => now(),
             'status' => 'processing',
         ]);
 
+        $invoiceSent = false;
         if (! $order->invoice_sent_at) {
-            Mail::to($order->customer_email)->send(new OrderInvoiceMail($order->fresh('items')));
-            $order->update(['invoice_sent_at' => now()]);
+            try {
+                Mail::to($order->customer_email)->send(
+                    new OrderInvoiceMail($order->fresh('items'))
+                );
+                $order->update(['invoice_sent_at' => now()]);
+                $invoiceSent = true;
+            } catch (\Throwable $mailError) {
+                report($mailError);
+            }
         }
 
         return response()->json([
-            'message' => 'Order verified successfully. Your invoice has been sent by email.',
+            'message' => $invoiceSent
+                ? 'Order verified successfully. Your invoice has been sent by email.'
+                : 'Order verified successfully. You can download the invoice on the next page.',
             'order' => $order->fresh('items'),
+            'invoice_sent' => $invoiceSent,
         ]);
     }
 

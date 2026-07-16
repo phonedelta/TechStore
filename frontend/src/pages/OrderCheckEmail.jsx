@@ -35,7 +35,9 @@ export default function OrderCheckEmail() {
         )}
       </p>
       <p className="mt-2 text-sm text-slate">
-        Open the link in the email — your order will be verified automatically, then the invoice PDF is sent to the same address.
+        {emailSent
+          ? 'Open the link in the email — or use the button below. Your order will be verified automatically, then the invoice can be downloaded.'
+          : 'Use the button below to verify your order now. You can also check spam if an email arrives later.'}
       </p>
 
       {verificationUrl && (
@@ -43,13 +45,13 @@ export default function OrderCheckEmail() {
           href={verificationUrl}
           className="btn-press mt-8 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition hover:bg-blue-700"
         >
-          Open verification link
+          Verify my order now
           <ArrowRight className="h-4 w-4" />
         </a>
       )}
 
       <p className="mt-6 text-sm text-slate">
-        Didn&apos;t get it? Check spam / promotions, then try again.
+        Didn&apos;t get the email? Check spam / promotions, then use the button above.
       </p>
       <Link to="/products" className="mt-8 inline-block text-sm font-semibold text-blue-600 hover:underline">
         Continue shopping
