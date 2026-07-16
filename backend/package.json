@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "echo \"API-only: skipping Vite build\"",
         "dev": "vite"
     },
     "devDependencies": {
